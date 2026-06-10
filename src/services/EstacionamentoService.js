@@ -1,6 +1,6 @@
 class EstacionamentoService {
     constructor(repository) {
-        this.repository = repository; //RECEBE O BANCO
+        this.respository = repository; // banco
     }
 
     async listarTodos() {
@@ -9,17 +9,18 @@ class EstacionamentoService {
 
     async registrarEntrada(dados) {
         const vaga = parseInt(dados.vaga);
-        if (vaga < 1 || vaga > 9) throw new Error("Vaga inexistente (use 1 a 9)!"); //LIMITAÇÃO DE VAGAS
-
+        if (vaga < 1 || vaga > 9) throw new Error ("Vaga inexistente (escolha entre as vagas 1 e 9)!"); // total de vagas
+        
         const ocupada = await this.repository.findByVaga(vaga);
-        if (ocupada) throw new Error(`Vaga ${vaga} já ocupada!`); //PARA NÃO REPETIR VAGAS
+        if (ocupada) throw new Error('Vaga ${vaga} já ocupada!'); // não repetição de vagas
 
         return await this.repository.create(dados);
     }
 
     async registrarSaida(vaga) {
         const deletado = await this.repository.deleteByVaga(vaga);
-        if (!deletado) throw new Error("Vaga já está vazia!"); //CONSTAR SAIDA
+        if (!deletado) throw new Error ("Vaga já está vazia!"); // saida
+
         return true;
     }
 }
