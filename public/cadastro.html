@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Cadastro Estacionamento</title>
+<title>Deca Vagas - Cadastro</title>
 
 <style>
   body {
@@ -12,7 +12,6 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
   }
 
   .container {
@@ -38,7 +37,6 @@
     margin: 8px 0 15px;
     border-radius: 8px;
     border: 1px solid #ccc;
-    box-sizing: border-box;
     transition: 0.3s;
   }
 
@@ -62,7 +60,6 @@
     margin-top: 10px;
   }
 
-  /* CORRIGIDO: de :houver para :hover */
   .btn-salvar:hover {
     background: #5c3782;
   }
@@ -79,7 +76,7 @@
   <h2>Cadastro</h2>
 
   <label>Nome:</label>
-  <input type="text" id="nome" placeholder="Digite seu nome">
+  <input type="text" placeholder="Digite seu nome">
 
   <label>Número:</label>
   <input type="text" id="telefone" placeholder="(00) 00000-0000" oninput="formatarTelefone(this)">
@@ -88,43 +85,32 @@
   <input type="text" id="cpf" placeholder="000.000.000-00" oninput="formatarCPF(this)" onblur="validarCPF()">
   <div id="msgCPF"></div>
 
-  <label>Onde quer estacionar:</label>
-  <select id="local" onchange="mostrarOpcoes()">
+  <label>Tipo de estacionamento:</label>
+  <select id="tipo" onchange="mostrarCampos()">
     <option value="">Selecione</option>
-    <option value="derby">Derby</option>
-    <option value="camaragibe">Camaragibe</option>
+    <option value="estacionamento">Estacionamento</option>
+    <option value="instituicao">Instituição</option>
   </select>
 
-  <label>Escolha a instituição:</label>
-  <select id="instituicoes">
-    <option value="">Escolha primeiro o local acima</option>
-  </select>
-
-  <button class="btn-salvar" onclick="salvarNoSupabase()">Salvar Cadastro</button>
-
+  <div id="divlocal" style="display:none;">
+    <label>Localização</label>
+    <select id="local" onchange="mostrarOpcoes()">
+      <option value="">Selecione</option>
+      <option value="derby">Derby</option>
+      <option value="camaragibe">Camaragibe</option>
+    </select>
 </div>
+
+<div id="divDestino" style="display:none;">
+  <label id="tituloDestino">Escolha:</label>
+  <select id="destino"></select>
+</div>
+
+<button class="btn-salvar" onclick="salvarNoSupabase()">Salvar Cadastro</button>
 
 <script>
 
-// 🎯 FUNÇÃO ATUALIZADA E BLINDADA CONTRA TRAVAMENTOS
-function salvarNoSupabase() {
-  // Cria o objeto com os dados para mandar para o Node/Supabase
-  const dados = {
-    nome: document.getElementById('nome').value,
-    cpf: document.getElementById('cpf').value,
-    localidade: document.getElementById('instituicoes').value
-  };
-
-  // Envia os dados para o seu servidor em segundo plano
-  fetch('http://localhost:3000/veiculos', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(dados)
-  }).catch(error => console.error("Erro ao enviar para o servidor:", error));
-
-  // INDEPENDENTE DE QUALQUER ERRO, ISSO VAI FORÇAR A TELA A IR PRO INDEX AGORA!
-  window.location.href = "http://localhost:3000";
-}
+// JAVASCRIPT
 
 // 🎯 FORMATAÇÃO CPF
 function formatarCPF(input) {
@@ -151,8 +137,6 @@ function formatarTelefone(input) {
 function validarCPF() {
   let cpf = document.getElementById("cpf").value.replace(/\D/g, '');
   let msg = document.getElementById("msgCPF");
-
-  if (!msg) return; // Proteção extra caso a div suma
 
   if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
     msg.innerHTML = "<span class='erro'>CPF inválido</span>";
@@ -187,62 +171,98 @@ function validarCPF() {
   msg.innerHTML = "<span class='sucesso'>CPF válido ✔</span>";
 }
 
-// 📍 LISTA DINÂMICA DE INSTITUIÇÕES
-function mostrarOpcoes() {
-  let local = document.getElementById("local").value;
-  let select = document.getElementById("instituicoes");
+// 🎯 EXIBIÇÃO CONDICIONAL DE CAMPOS
 
-  if (!select) return;
+function mostrarCampos() {
+  let tipo = document.getElementById("tipo").value;
 
-  select.innerHTML = "";
+  if (tipo !== "") {
+    document.getElementById("divlocal").style.display = "block";
+  }
 
-  if (local === "derby") {
-    let opcoes = [
-      "UNINASSAU, BLOCO A Derby",
-      "UNINASSAU, BLOCO B Derby",
-      "UNINASSAU, BLOCO C Derby",
-      "UNINASSAU, BLOCO D Derby",
-      "UNINASSAU, BLOCO E Derby",
-      "Estácio Derby",
-      "Wyden EAD Derby",
-      "Colégio Apoio Derby",
-      "Colégio Equipe",
-      "Colégio da Polícia Militar"
-    ];
-
-    opcoes.forEach(op => {
-      let option = document.createElement("option");
-      option.text = op;
-      option.value = op; // Adicionado value para enviar o texto correto no fetch
-      select.add(option);
-    });
-
-  } else if (local === "camaragibe") {
-    let opcoes = [
-      "UNINASSAU Camaragibe",
-      "Unopar Camaragibe",
-      "Anhanguera Camaragibe",
-      "Escola Técnica Alcides do Nascimento",
-      "Escola Vale das Pedreiras",
-      "Escola Abigail Bernardes"
-    ];
-
-    opcoes.forEach(op => {
-      let option = document.createElement("option");
-      option.text = op;
-      option.value = op; // Adicionado value para enviar o texto correto no fetch
-      select.add(option);
-    });
-
-  } else {
-    let option = document.createElement("option");
-    option.text = "Escolha primeiro o local acima";
-    option.value = "";
-    select.add(option);
+  else {
+    document.getElementById("divlocal").style.display = "none";
+    document.getElementById("divDestino").style.display = "none";
   }
 }
 
-</script>
 
-</body>
-</html>
+// 📍 LISTA DINÂMICA DE INSTITUIÇÕES
+function mostrarOpcoes() {
+
+  let tipo = document.getElementById("tipo").value;
+  let local = document.getElementById("local").value;
+
+  let destino = document.getElementById("destino");
+  let titulo = document.getElementById("tituloDestino");
+
+
+
+  destino.innerHTML = "";
+
+  if (local === "") {
+    document.getElementById("divDestino").style.display = "none";
+    return;
+  }
+
+  document.getElementById("divDestino").style.display = "block";
+
+  let opcoes = [];
+
+  if (tipo === "instituicao") {
+
+    titulo.innerText = "Escolha a instituição:";
+
+    if (local === "derby") {
+      opcoes = [
+        "UNINASSAU BLOCO A",
+        "UNINASSAU BLOCO B",
+        "UNINASSAU BLOCO C",
+        "Estácio Derby",
+        "Colegio Apoio Derby"
+      ];
+    }
+
+    if (local === "camaragibe") {
+      opcoes = [
+        "UNINASSAU CAMARAGIBE",
+        "Unopar Camaragibe",
+        "Anhanguera Camaragibe"
+      ];
+    }
+  }
+
+  else if (tipo === "estacionamento") {
+
+    titulo.innerText = "Escolha o estacionamento:";
+
+    if (local === "derby") {
+      opcoes = [
+        "Estacionamento Seu Jorge",
+        "Estacionamento Central Do Derby",
+        "Estacionamento Shopping Derby"
+      ];
+    }
+
+    if (local === "camaragibe") {
+      opcoes = [
+        "Estacionamento Nico Bobo",
+        "Estacionamento Maria e José"
+      ];
+    }
+  }
+
+  opcoes.forEach(op => {
+    let option = document.createElement("option");
+    option.text = op;
+    destino.add(option);
+  });
+}
+
+function salvarNoSupabase() {
+  alert("Cadastro salvo com sucesso!");
+
+  window.location.href = "/";
+}
+
+</script> 
